@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, date
 import calendar
 
-# ตั้งค่าหน้าเว็บให้เต็มตาและสวยงาม
+# ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="ระบบจองซ้อมปฏิบัติงาน", page_icon="🏥", layout="centered")
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK0rw7dtoG9hR9WDfFzBrP_uYjXvURAK31cBPBFu4PbYae5CpKAQEIVRfU6F0i--ak5A/exec"
@@ -32,7 +32,7 @@ students = [
     "6810067 ธันยพัฒน์ เกรียงพิทักษ์", "6810068 บุณญาพร ศิริศิลป์", "6810069 บุณยาภัค ลอมาเละ",
     "6810070 เบญญาภา ชูทอง", "6810071 ปูริดา อุดมวงศ์", "6810072 พรภาณี มัธยมพงศ์",
     "6810073 พศิน สายวงศ์", "6810074 พองาม พงศทันธรรม", "6810075 พิมพ์มาดา เสถียรพันธฤทธิ์",
-    "6810076 ภาสุพล ยอดสุข", "6810077 ภูมิชรินทร์ สารสินพิทักษ์", "6810078วัลลภา ยกเจริญ",
+    "6810076 ภาสุพล ยอดสุข", "6810077 ภูมิชรินทร์ สารสินพิทักษ์", "6810078 วัลลภา ยกเจริญ",
     "6810079 วีณารัตน์ บุญสิริฉาย", "6810080 วุฒินันต์ เลิศศิริวรกุล", "6810081 ศรัญญูย์ หลังพันธุ์",
     "6810082 ศุภณัฐ ปัญจมาสกุล", "6810083 ศุภาพิชญ์ รอดภัย", "6810084 ศุภิสรา ปิ่นชัยมูล",
     "6810085 สมัชญ์ ตีระพิพัฒนกุล", "6810086 สุวรินทร์ คุ้มครองเลิศสิน", "6810087 อภิชญา ศรีชัย",
@@ -42,25 +42,34 @@ students = [
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# ---------------- หน้า Login (มีช่องพิมพ์ค้นหาแบบในเรฟ) ----------------
+# CSS ตกแต่งให้ฟีลลิ่งคล้ายเรฟ (โทนม่วงเข้ม Modern UI)
+st.markdown("""
+    <style>
+    .stApp { background-color: #f8fafc; }
+    .main-header { background: #312e81; color: white; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+""", unsafe_allow_html=True)
+
+# ---------------- หน้า Login (ตามภาพเรฟที่ 1)[span_6](start_span)[span_6](end_span) ----------------
 if not st.session_state.user:
-    st.markdown("""
-        <div style='text-align: center; padding: 30px;'>
-            <h2 style='color: #1e1b4b;'>🏥 เข้าสู่ระบบนักศึกษา</h2>
-            <p style='color: #64748b; font-size: 14px;'>พิมพ์รหัสนักศึกษา (เช่น 6810011) หรือชื่อ แล้วเลือกจากรายการ</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
-    with col_l2:
-        search_query = st.text_input("ค้นหารหัสนักศึกษา / ชื่อ-นามสกุล", placeholder="🔍 พิมพ์รหัส 6810... หรือชื่อ...")
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col_c1, col_c2, col_c3 = st.columns([1, 2, 1])
+    with col_c2:
+        st.markdown("""
+            <div style='background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center;'>
+                <h3 style='color: #1e1b4b; margin-bottom: 5px;'>เข้าสู่ระบบนักศึกษา</h3>
+                <p style='color: #64748b; font-size: 13px;'>พิมพืรหัสนักศึกษา (เช่น 6810011) หรือชื่อ แล้วเลือกจากรายการ</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        search_query = st.text_input("ค้นหารหัสนักศึกษา / ชื่อ-นามสกุล", placeholder="🔍 พิมพ์รหัส 6810... หรือชื่อ...", label_visibility="collapsed")
         
         if search_query.strip():
             filtered_students = [s for s in students if search_query.lower() in s.lower()]
         else:
             filtered_students = students
         
-        selected_student = st.selectbox("เลือกรายชื่อจากผลการค้นหา", ["-- กรุณาเลือกรายชื่อ --"] + filtered_students)
+        selected_student = st.selectbox("เลือกรายชื่อ", ["-- กรุณาเลือกรายชื่อ --"] + filtered_students, label_visibility="collapsed")
         
         if st.button("เข้าสู่ระบบ", type="primary", use_container_width=True):
             if selected_student != "-- กรุณาเลือกรายชื่อ --":
@@ -69,18 +78,24 @@ if not st.session_state.user:
             else:
                 st.warning("กรุณาเลือกรายชื่อก่อนเข้าสู่ระบบ")
 else:
-    # ---------------- Header ด้านบนสุด ----------------
-    col_h1, col_h2 = st.columns([3, 1])
-    with col_h1:
-        st.markdown("### 🏥 ระบบจองซ้อมปฏิบัติงาน")
-        st.caption("Practical Skill & Equipment Booking System")
-    with col_h2:
-        st.markdown(f"<div style='background:#312e81; color:white; padding:8px; border-radius:8px; text-align:center; font-size:13px;'><b>{st.session_state.user}</b></div>", unsafe_allow_html=True)
-        if st.button("ออกจากระบบ", use_container_width=True):
-            st.session_state.user = None
-            st.rerun()
+    # ---------------- Header ด้านบนสุด (ตามภาพเรฟที่ 2-8)[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)[span_11](start_span)[span_11](end_span)[span_12](start_span)[span_12](end_span)[span_13](start_span)[span_13](end_span) ----------------
+    st.markdown(f"""
+        <div class='main-header'>
+            <div>
+                <h3 style='margin:0; font-size: 20px;'>🏥 ระบบจองซ้อมปฏิบัติงาน</h3>
+                <p style='margin:0; font-size: 12px; opacity: 0.8;'>Practical Skill & Equipment Booking System</p>
+            </div>
+            <div style='background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; font-size: 13px;'>
+                <b>{st.session_state.user}</b>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("ออกจากระบบ", type="secondary"):
+        st.session_state.user = None
+        st.rerun()
             
-    st.divider()
+    st.write("")
     
     @st.cache_data(ttl=2)
     def fetch_data():
@@ -89,8 +104,8 @@ else:
             return res.json()
         except:
             return {
-                "rooms": [{"name": "ห้องปฏิบัติการกายภาพบำบัด 1", "date": "2026-10-28", "time": "09:00 - 16:00"}],
-                "equipments": [{"name": "Humerus Model", "count": 2, "time": 30}],
+                "rooms": [],
+                "equipments": [],
                 "bookings": []
             }
 
@@ -99,7 +114,7 @@ else:
     equipments = data.get("equipments", [])
     bookings = data.get("bookings", [])
 
-    # 4 แท็บหลักด้านบน (ฟีลเด๊ะตามเรฟ)
+    # 5 แท็บหลักตามเรฟ
     tab_home, tab_book, tab_allbooking, tab_mybooking, tab_manage = st.tabs([
         "🏠 หน้าหลัก", 
         "📅 จองซ้อมปฏิบัติ", 
@@ -108,18 +123,18 @@ else:
         "⚙️ จัดการระบบ (Admin)"
     ])
 
-    # ---------------- 1. หน้าหลัก ----------------
+    # ---------------- 1. หน้าหลัก (ตามภาพเรฟที่ 2)[span_14](start_span)[span_14](end_span) ----------------
     with tab_home:
-        # กล่องเวลาเรียลไทม์
+        # กล่องเวลาปัจจุบัน
         st.markdown(f"""
             <div style='background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
                 <p style='margin:0; font-size: 13px; opacity: 0.9;'>🕒 เวลาปัจจุบัน</p>
-                <h1 style='margin:5px 0 0 0; font-size: 36px;'>{datetime.now().strftime('%H:%M:%S')}</h1>
+                <h1 style='margin:5px 0 0 0; font-size: 32px;'>{datetime.now().strftime('%H:%M:%S')}</h1>
                 <p style='margin:5px 0 0 0; font-size: 14px;'>วัน{datetime.now().strftime('%Aที่ %d %B %Y')}</p>
             </div>
         """, unsafe_allow_html=True)
         
-        # ปฏิทินรายเดือน
+        # ปฏิทินจองซ้อมรายเดือน
         st.markdown("### 📅 ปฏิทินจองซ้อม")
         col_m1, col_m2 = st.columns(2)
         with col_m1:
@@ -156,7 +171,7 @@ else:
         else:
             st.warning("ไม่มีห้องปฏิบัติการเปิดให้บริการในวันที่เลือก")
 
-    # ---------------- 2. จองซ้อมปฏิบัติ ----------------
+    # ---------------- 2. จองซ้อมปฏิบัติ (ตามภาพเรฟที่ 3)[span_15](start_span)[span_15](end_span) ----------------
     with tab_book:
         st.subheader("📅 จองคิวซ้อมปฏิบัติงาน")
         st.caption("เลือกวันที่ คู่ซ้อม และอุปกรณ์ที่ต้องการฝึกซ้อมปฏิบัติ")
@@ -196,7 +211,7 @@ else:
                     except Exception as e:
                         st.error(f"เกิดข้อผิดพลาด: {e}")
 
-    # ---------------- 3. การจองทั้งหมด ----------------
+    # ---------------- 3. การจองทั้งหมด (ตามภาพเรฟที่ 4)[span_16](start_span)[span_16](end_span) ----------------
     with tab_allbooking:
         st.subheader("📋 ตารางการจองและคู่ที่กำลังซ้อมทั้งหมด")
         if not bookings:
@@ -208,7 +223,7 @@ else:
                     st.text(f"คู่ซ้อม: {b.get('user')} & {b.get('partner')}")
                     st.caption(f"วันที่: {b.get('date')}")
 
-    # ---------------- 4. คิวของฉัน ----------------
+    # ---------------- 4. คิวของฉัน (ตามภาพเรฟที่ 5)[span_17](start_span)[span_17](end_span) ----------------
     with tab_mybooking:
         st.subheader("👥 รายการจองซ้อมของฉันและคู่ซ้อม")
         my_bookings = [b for b in bookings if st.session_state.user in b.get('user', '') or st.session_state.user in b.get('partner', '')]
@@ -223,7 +238,7 @@ else:
                     st.caption(f"อุปกรณ์: {b.get('equipments')}")
                     st.markdown("🟢 **สถานะ:** รอดำเนินการ / พร้อมใช้งาน")
 
-    # ---------------- 5. จัดการระบบ (Admin) ----------------
+    # ---------------- 5. จัดการระบบ (Admin) (ตามภาพเรฟที่ 6-8)[span_18](start_span)[span_18](end_span)[span_19](start_span)[span_19](end_span)[span_20](start_span)[span_20](end_span)[span_21](start_span)[span_21](end_span) ----------------
     with tab_manage:
         st.warning("⚠️ โหมดผู้ดูแลระบบ (เปิดสิทธิ์ให้ทุกคน): สมาชิกสามารถเพิ่ม แก้ไข หรือลบข้อมูลห้องและอุปกรณ์ได้ทันที Real-time")
         
@@ -270,4 +285,5 @@ else:
                     st.success("เพิ่มอุปกรณ์สำเร็จ!")
                     st.cache_data.clear()
                     st.rerun()
+
 
