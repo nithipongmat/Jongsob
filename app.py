@@ -1,10 +1,10 @@
 import streamlit as st
 import requests
-from datetime import datetime, date
+from datetime import datetime
 import calendar
 
 # ตั้งค่าหน้าเว็บ
-st.set_page_config(page_title="ระบบจองซ้อมปฏิบัติงาน", page_icon="🏥", layout="centered")
+st.set_page_config(page_title="ระบบจองซ้อมปฏิบัติงาน PTMU", page_icon="🏥", layout="centered")
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK0rw7dtoG9hR9WDfFzBrP_uYjXvURAK31cBPBFu4PbYae5CpKAQEIVRfU6F0i--ak5A/exec"
 
@@ -42,37 +42,35 @@ students = [
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# CSS แต่งสไตล์ให้เหมือนเรฟ
+# CSS จัดการสีตัวหนังสือให้ชัดเจน ไม่ขาวโพน
 st.markdown("""
     <style>
-    .stApp { background-color: #f8fafc; }
     .main-header { background: #312e81; color: white; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .login-card { background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 450px; margin: auto; }
+    .login-box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; color: #1e1b4b; }
+    p, span, label, div { color: inherit; }
     </style>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้า Login แบบ Modal Card ตามเรฟ ----------------
+# ---------------- หน้า Login ----------------
 if not st.session_state.user:
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div class='login-card'>
-            <div style='background: #312e81; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: white; font-size: 24px;'>👤</div>
-            <h3 style='color: #1e1b4b; margin-bottom: 5px;'>เข้าสู่ระบบนักศึกษา</h3>
-            <p style='color: #64748b; font-size: 13px; margin-bottom: 20px;'>พิมพ์รหัสนักศึกษา (เช่น 6810011) หรือชื่อ แล้วเลือกจากรายการ</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
-    with col_l2:
-        search_query = st.text_input("ค้นหา", placeholder="🔍 พิมพ์รหัส 6810... หรือชื่อ...", label_visibility="collapsed")
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("""
+            <div class='login-box'>
+                <h3 style='color: #1e1b4b; margin-bottom: 5px;'>🏥 เข้าสู่ระบบนักศึกษา</h3>
+                <p style='color: #64748b; font-size: 13px;'>พิมพ์รหัสนักศึกษา (เช่น 6810011) หรือชื่อ แล้วเลือกจากรายการ</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        search_query = st.text_input("ค้นหารหัสนักศึกษา / ชื่อ", placeholder="🔍 พิมพ์รหัส 6810... หรือชื่อ...")
         
         if search_query.strip():
             filtered_students = [s for s in students if search_query.lower() in s.lower()]
         else:
             filtered_students = students
         
-        selected_student = st.selectbox("เลือกรายชื่อ", ["-- กรุณาเลือกรายชื่อ --"] + filtered_students, label_visibility="collapsed")
+        selected_student = st.selectbox("เลือกรายชื่อ", ["-- กรุณาเลือกรายชื่อ --"] + filtered_students)
         
         if st.button("เข้าสู่ระบบ", type="primary", use_container_width=True):
             if selected_student != "-- กรุณาเลือกรายชื่อ --":
@@ -84,7 +82,7 @@ else:
     # ---------------- Header ด้านบน ----------------
     col_h1, col_h2 = st.columns([3, 1])
     with col_h1:
-        st.markdown("### 🏥 ระบบจองซ้อมปฏิบัติงาน")
+        st.markdown("### 🏥 ระบบจองซ้อมปฏิบัติงาน PTMU")
         st.caption("Practical Skill & Equipment Booking System")
     with col_h2:
         st.markdown(f"<div style='background:#312e81; color:white; padding:8px; border-radius:8px; text-align:center; font-size:13px;'><b>{st.session_state.user}</b></div>", unsafe_allow_html=True)
@@ -125,8 +123,8 @@ else:
         st.markdown(f"""
             <div style='background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
                 <p style='margin:0; font-size: 13px; opacity: 0.9;'>🕒 เวลาปัจจุบัน</p>
-                <h1 style='margin:5px 0 0 0; font-size: 32px;'>{datetime.now().strftime('%H:%M:%S')}</h1>
-                <p style='margin:5px 0 0 0; font-size: 14px;'>วัน{datetime.now().strftime('%Aที่ %d %B %Y')}</p>
+                <h1 style='margin:5px 0 0 0; font-size: 32px; color: white;'>{datetime.now().strftime('%H:%M:%S')}</h1>
+                <p style='margin:5px 0 0 0; font-size: 14px; color: white;'>วัน{datetime.now().strftime('%Aที่ %d %B %Y')}</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -140,7 +138,7 @@ else:
         cal_matrix = calendar.monthcalendar(cal_year, cal_month)
         booked_dates = [b.get('date') for b in bookings]
         
-        html_cal = "<table style='width:100%; text-align:center; border-collapse:collapse; background:white; border-radius:8px;'><tr style='background:#f8fafc;'><th style='padding:10px;'>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr>"
+        html_cal = "<table style='width:100%; text-align:center; border-collapse:collapse; background:white; color:#1e1b4b; border-radius:8px;'><tr style='background:#f8fafc;'><th style='padding:10px;'>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr>"
         for week in cal_matrix:
             html_cal += "<tr>"
             for day in week:
@@ -177,7 +175,6 @@ else:
             room_names = [r.get('name') for r in rooms] if rooms else ["-- ไม่มีห้องเปิดในวันเลือก --"]
             book_room = st.selectbox("เลือกห้องปฏิบัติการ", room_names)
             
-            # ดึงช่วงเวลาจากห้องที่เปิด หรือค่าเริ่มต้น
             time_slot_options = [r.get('time') for r in rooms if r.get('name') == book_room]
             selected_time = st.selectbox("เลือกรอบช่วงเวลา", time_slot_options if time_slot_options else ["09:00 - 16:00"])
             
