@@ -1,13 +1,14 @@
 import streamlit as st
 import requests
-from datetime import datetime
+from datetime import datetime, date
+import calendar
 
-# ตั้งค่าหน้าเว็บ
-st.set_page_config(page_title="PTMU Booking System", page_icon="📅", layout="centered")
+# ตั้งค่าหน้าเว็บให้เต็มตาและสวยงาม
+st.set_page_config(page_title="ระบบจองซ้อมปฏิบัติงาน", page_icon="🏥", layout="centered")
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK0rw7dtoG9hR9WDfFzBrP_uYjXvURAK31cBPBFu4PbYae5CpKAQEIVRfU6F0i--ak5A/exec"
 
-# รายชื่อนักศึกษาตัวจริงตามที่ระบุ
+# รายชื่อนักศึกษา 80 กว่าคน
 students = [
     "6810001 กชพร คชวงษ์", "6810002 กัญภัท ภัทร์ธาดาโชค", "6810003 กัณฐกะ ปัทมศรีรัตนา",
     "6810004 คุณพงศ์ กังวาลสกุล", "6810005 ชนิภา สุวรรณทา", "6810006 ณัฐกฤตา ห้วยเรไร",
@@ -31,7 +32,7 @@ students = [
     "6810067 ธันยพัฒน์ เกรียงพิทักษ์", "6810068 บุณญาพร ศิริศิลป์", "6810069 บุณยาภัค ลอมาเละ",
     "6810070 เบญญาภา ชูทอง", "6810071 ปูริดา อุดมวงศ์", "6810072 พรภาณี มัธยมพงศ์",
     "6810073 พศิน สายวงศ์", "6810074 พองาม พงศทันธรรม", "6810075 พิมพ์มาดา เสถียรพันธฤทธิ์",
-    "6810076 ภาสุพล ยอดสุข", "6810077 ภูมิชรินทร์ สารสินพิทักษ์", "6810078 วัลลภา ยกเจริญ",
+    "6810076 ภาสุพล ยอดสุข", "6810077 ภูมิชรินทร์ สารสินพิทักษ์", "6810078วัลลภา ยกเจริญ",
     "6810079 วีณารัตน์ บุญสิริฉาย", "6810080 วุฒินันต์ เลิศศิริวรกุล", "6810081 ศรัญญูย์ หลังพันธุ์",
     "6810082 ศุภณัฐ ปัญจมาสกุล", "6810083 ศุภาพิชญ์ รอดภัย", "6810084 ศุภิสรา ปิ่นชัยมูล",
     "6810085 สมัชญ์ ตีระพิพัฒนกุล", "6810086 สุวรินทร์ คุ้มครองเลิศสิน", "6810087 อภิชญา ศรีชัย",
@@ -41,24 +42,40 @@ students = [
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# หน้า Login เลือกรายชื่อ
+# ---------------- หน้า Login (มีช่องพิมพ์ค้นหาแบบในเรฟ) ----------------
 if not st.session_state.user:
-    st.title("🏥 เข้าสู่ระบบจองซ้อม PTMU")
-    st.write("เลือกรายชื่อนักศึกษาเพื่อเข้าใช้งานระบบและเชื่อมโยงข้อมูลการจองคู่ของคุณ")
+    st.markdown("""
+        <div style='text-align: center; padding: 30px;'>
+            <h2 style='color: #1e1b4b;'>🏥 เข้าสู่ระบบนักศึกษา</h2>
+            <p style='color: #64748b; font-size: 14px;'>พิมพ์รหัสนักศึกษา (เช่น 6810011) หรือชื่อ แล้วเลือกจากรายการ</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    selected_student = st.selectbox("รายชื่อนักศึกษา", ["-- กรุณาเลือกรายชื่อของคุณ --"] + students)
-    
-    if st.button("เข้าสู่ระบบ", type="primary", use_container_width=True):
-        if selected_student != "-- กรุณาเลือกรายชื่อของคุณ --":
-            st.session_state.user = selected_student
-            st.rerun()
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    with col_l2:
+        search_query = st.text_input("ค้นหารหัสนักศึกษา / ชื่อ-นามสกุล", placeholder="🔍 พิมพ์รหัส 6810... หรือชื่อ...")
+        
+        if search_query.strip():
+            filtered_students = [s for s in students if search_query.lower() in s.lower()]
         else:
-            st.warning("กรุณาเลือกรายชื่อก่อนเข้าสู่ระบบ")
+            filtered_students = students
+        
+        selected_student = st.selectbox("เลือกรายชื่อจากผลการค้นหา", ["-- กรุณาเลือกรายชื่อ --"] + filtered_students)
+        
+        if st.button("เข้าสู่ระบบ", type="primary", use_container_width=True):
+            if selected_student != "-- กรุณาเลือกรายชื่อ --":
+                st.session_state.user = selected_student
+                st.rerun()
+            else:
+                st.warning("กรุณาเลือกรายชื่อก่อนเข้าสู่ระบบ")
 else:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.success(f"👤 ผู้ใช้งาน: **{st.session_state.user}**")
-    with col2:
+    # ---------------- Header ด้านบนสุด ----------------
+    col_h1, col_h2 = st.columns([3, 1])
+    with col_h1:
+        st.markdown("### 🏥 ระบบจองซ้อมปฏิบัติงาน")
+        st.caption("Practical Skill & Equipment Booking System")
+    with col_h2:
+        st.markdown(f"<div style='background:#312e81; color:white; padding:8px; border-radius:8px; text-align:center; font-size:13px;'><b>{st.session_state.user}</b></div>", unsafe_allow_html=True)
         if st.button("ออกจากระบบ", use_container_width=True):
             st.session_state.user = None
             st.rerun()
@@ -72,151 +89,185 @@ else:
             return res.json()
         except:
             return {
-                "rooms": ["ห้องปฏิบัติการกายภาพบำบัดหลัก (ตายตัว)"],
-                "equipments": ["Humerus Model", "Goniometer", "Reflex Hammer"],
+                "rooms": [{"name": "ห้องปฏิบัติการกายภาพบำบัด 1", "date": "2026-10-28", "time": "09:00 - 16:00"}],
+                "equipments": [{"name": "Humerus Model", "count": 2, "time": 30}],
                 "bookings": []
             }
 
     data = fetch_data()
-    rooms = data.get("rooms", ["ห้องปฏิบัติการกายภาพบำบัดหลัก (ตายตัว)"])
-    equipments = data.get("equipments", ["Humerus Model", "Goniometer"])
+    rooms = data.get("rooms", [])
+    equipments = data.get("equipments", [])
     bookings = data.get("bookings", [])
 
-    # 4 แท็บหลักตามบรีฟ
-    tab_home, tab_book, tab_mybooking, tab_manage = st.tabs([
+    # 4 แท็บหลักด้านบน (ฟีลเด๊ะตามเรฟ)
+    tab_home, tab_book, tab_allbooking, tab_mybooking, tab_manage = st.tabs([
         "🏠 หน้าหลัก", 
-        "📅 หน้าการจอง", 
-        "📋 จัดการการจองของฉัน", 
-        "⚙️ จัดการระบบ"
+        "📅 จองซ้อมปฏิบัติ", 
+        "📋 การจองทั้งหมด", 
+        "👥 คิวของฉัน", 
+        "⚙️ จัดการระบบ (Admin)"
     ])
 
     # ---------------- 1. หน้าหลัก ----------------
     with tab_home:
-        st.subheader("🏠 หน้าหลักระบบซ้อมปฏิบัติการ")
+        # กล่องเวลาเรียลไทม์
+        st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;'>
+                <p style='margin:0; font-size: 13px; opacity: 0.9;'>🕒 เวลาปัจจุบัน</p>
+                <h1 style='margin:5px 0 0 0; font-size: 36px;'>{datetime.now().strftime('%H:%M:%S')}</h1>
+                <p style='margin:5px 0 0 0; font-size: 14px;'>วัน{datetime.now().strftime('%Aที่ %d %B %Y')}</p>
+            </div>
+        """, unsafe_allow_html=True)
         
-        # วันเวลาเรียลไทม์ และห้องที่มีให้ซ้อม
-        now_date_str = datetime.now().strftime("%d/%m/%Y")
-        now_time_str = datetime.now().strftime("%H:%M:%S")
-        st.info(f"📅 **วันที่:** {now_date_str} | 🕒 **เวลาปัจจุบัน:** {now_time_str}")
+        # ปฏิทินรายเดือน
+        st.markdown("### 📅 ปฏิทินจองซ้อม")
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            cal_year = st.selectbox("ปี", [2026, 2027], index=0)
+        with col_m2:
+            cal_month = st.selectbox("เดือน", list(range(1, 13)), format_func=lambda x: calendar.month_name[x], index=datetime.now().month - 1)
         
-        st.markdown(f"### 🛏️ ห้องฝึกซ้อมวันนี้")
-        st.markdown(f"<div style='padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc;'><b>📍 {rooms[0]}</b><br><span style='color:green;'>🟢 เปิดให้บริการช่วงเวลาปกติ</span></div>", unsafe_allow_html=True)
-
-        st.divider()
-
-        # ปฏิทินเช็ควันจอง
-        st.markdown("### 📅 ปฏิทินเช็ควันจองซ้อม")
-        selected_calendar_date = st.date_input("เลือกดูวันที่ต้องการเช็คคิวจอง")
-        
+        cal_matrix = calendar.monthcalendar(cal_year, cal_month)
         booked_dates = [b.get('date') for b in bookings]
-        matched_bookings = [b for b in bookings if b.get('date') == str(selected_calendar_date)]
         
-        if str(selected_calendar_date) in booked_dates:
-            st.success(f"🟢 วันที่ {selected_calendar_date} มีการจองแล้ว ({len(matched_bookings)} รายการ)")
-            for mb in matched_bookings:
-                st.caption(f"- ห้อง: {mb.get('room')} | เวลา: {mb.get('time')} | ผู้จอง: {mb.get('user')} (คู่: {mb.get('partner', '-')})")
-        else:
-            st.caption(f"⚪ วันที่ {selected_calendar_date} ยังไม่มีการจอง")
+        html_cal = "<table style='width:100%; text-align:center; border-collapse:collapse; background:white; border-radius:8px;'><tr style='background:#f8fafc;'><th style='padding:10px;'>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr>"
+        for week in cal_matrix:
+            html_cal += "<tr>"
+            for day in week:
+                if day == 0:
+                    html_cal += "<td style='padding:12px; color:#cbd5e1;'>-</td>"
+                else:
+                    d_str = f"{cal_year}-{cal_month:02d}-{day:02d}"
+                    has_booking = d_str in booked_dates
+                    bg_color = "#d1fae5" if has_booking else "transparent"
+                    text_color = "#065f46" if has_booking else "inherit"
+                    dot = " 🟢" if has_booking else ""
+                    html_cal += f"<td style='padding:12px; background:{bg_color}; color:{text_color}; border:1px solid #f1f5f9;'>{day}{dot}</td>"
+            html_cal += "</tr>"
+        html_cal += "</table>"
+        st.markdown(html_cal, unsafe_allow_html=True)
+        st.caption("🟢 มีการเปิดซ้อม/จอง")
 
         st.divider()
-
-        # สรุปอุปกรณ์ ว่างกี่ชิ้น คิวรอ และเวลาเหลือ
-        st.markdown("### 🔬 สถานะอุปกรณ์ส่วนกลาง")
-        if equipments:
-            for eq in equipments:
-                eq_bookings = [b for b in bookings if eq in b.get('equipments', '')]
-                queue_count = len(eq_bookings)
-                
-                with st.container(border=True):
-                    c1, c2, c3 = st.columns(3)
-                    c1.markdown(f"**📦 อุปกรณ์:** {eq}")
-                    c2.markdown(f"👥 **คิวที่รอ:** {queue_count} คิว")
-                    
-                    if queue_count > 0:
-                        remaining_mins = max(0, 60 - (datetime.now().minute % 60))
-                        c3.markdown(f"⏱️ **เหลือเวลาอีก:** {remaining_mins} นาที")
-                    else:
-                        c3.markdown("🟢 **สถานะ:** ว่าง")
-                    
-                    current_user_using = eq_bookings[0]['user'] if queue_count > 0 else 'ไม่มี'
-                    st.caption(f"🕒 กำลังใช้งานโดย: {current_user_using} | เวลารวมต่อรอบ: ตามกำหนด")
+        st.markdown("### 🛏️ ห้องปฏิบัติการที่เปิดซ้อมประจำวัน")
+        if rooms:
+            for r in rooms:
+                st.info(f"📍 ห้อง: {r.get('name')} | เวลา: {r.get('time')}")
         else:
-            st.info("ยังไม่มีอุปกรณ์ในระบบ")
+            st.warning("ไม่มีห้องปฏิบัติการเปิดให้บริการในวันที่เลือก")
 
-    # ---------------- 2. หน้าการจอง ----------------
+    # ---------------- 2. จองซ้อมปฏิบัติ ----------------
     with tab_book:
-        st.subheader("📅 ทำรายการจองอุปกรณ์และห้องซ้อม")
-        with st.form("booking_form"):
-            book_date = st.date_input("เลือกวันที่ต้องการจอง")
-            book_time = st.text_input("ระบุช่วงเวลา (เช่น 09:00 - 11:30)")
+        st.subheader("📅 จองคิวซ้อมปฏิบัติงาน")
+        st.caption("เลือกวันที่ คู่ซ้อม และอุปกรณ์ที่ต้องการฝึกซ้อมปฏิบัติ")
+        
+        with st.form("booking_form", clear_on_submit=True):
+            book_date = st.date_input("วันที่ต้องการเข้าซ้อม")
             
-            # เลือกคู่ซ้อมจากรายชื่อ 80 คน
-            partner_options = ["-- ไม่มีคู่ซ้อม (เดี่ยว) --"] + [s for s in students if s != st.session_state.user]
-            partner_select = st.selectbox("เลือกรายชื่อคู่ซ้อม (ถ้ามี)", partner_options)
+            room_names = [r.get('name') for r in rooms] if rooms else ["-- ไม่มีห้องเปิดในวันเลือก --"]
+            book_room = st.selectbox("เลือกห้องปฏิบัติการ", room_names)
             
-            st.write("เลือกอุปกรณ์ส่วนกลางที่ต้องการใช้งาน:")
-            selected_eqs = []
-            for eq in equipments:
-                if st.checkbox(eq, key=f"eq_{eq}"):
-                    selected_eqs.append(eq)
-                    
-            submitted = st.form_submit_button("ยืนยันการจอง", type="primary", use_container_width=True)
+            st.text_input("ผู้จองคนที 1 (ตัวคุณ - ล็อกออโต้)", value=st.session_state.user, disabled=True)
+            
+            partner_options = ["-- เลือกคู่ซ้อมจากรายชื่อนักศึกษา --"] + [s for s in students if s != st.session_state.user]
+            partner_select = st.selectbox("ผู้จองคนที 2 (คู่ซ้อมปฏิบัติ)", partner_options)
+            
+            eq_names = [eq.get('name') for eq in equipments] if equipments else ["-- ยังไม่มีอุปกรณ์ในระบบ --"]
+            chosen_eq = st.selectbox("เลือกอุปกรณ์ซ้อมปฏิบัติ", eq_names)
+            
+            submitted = st.form_submit_button("ยืนยันการจองคิวซ้อม", type="primary", use_container_width=True)
             if submitted:
-                if not book_time.strip():
-                    st.warning("กรุณาระบุช่วงเวลาที่ต้องการจอง")
+                if partner_select == "-- เลือกคู่ซ้อมจากรายชื่อนักศึกษา --":
+                    st.warning("กรุณาเลือกคู่ซ้อมปฏิบัติ")
                 else:
                     payload = {
                         "action": "book",
                         "user": st.session_state.user,
-                        "partner": partner_select if partner_select != "-- ไม่มีคู่ซ้อม (เดี่ยว) --" else "-",
+                        "partner": partner_select,
                         "date": str(book_date),
-                        "time": book_time,
-                        "room": rooms[0],
-                        "equipments": ", ".join(selected_eqs)
+                        "room": book_room,
+                        "equipments": chosen_eq
                     }
                     try:
                         requests.post(GOOGLE_SCRIPT_URL, json=payload)
-                        st.success("จองสำเร็จเรียบร้อย!")
+                        st.success("จองคิวสำเร็จเรียบร้อย!")
                         st.cache_data.clear()
                         st.rerun()
                     except Exception as e:
                         st.error(f"เกิดข้อผิดพลาด: {e}")
 
-    # ---------------- 3. หน้าจัดการการจองของฉัน ----------------
+    # ---------------- 3. การจองทั้งหมด ----------------
+    with tab_allbooking:
+        st.subheader("📋 ตารางการจองและคู่ที่กำลังซ้อมทั้งหมด")
+        if not bookings:
+            st.info("ไม่มีรายการจองซ้อมในขณะนี้")
+        else:
+            for b in bookings:
+                with st.container(border=True):
+                    st.markdown(f"**📦 อุปกรณ์:** {b.get('equipments')} | **📍 ห้อง:** {b.get('room')}")
+                    st.text(f"คู่ซ้อม: {b.get('user')} & {b.get('partner')}")
+                    st.caption(f"วันที่: {b.get('date')}")
+
+    # ---------------- 4. คิวของฉัน ----------------
     with tab_mybooking:
-        st.subheader("📋 จัดการการจองของฉัน / รายการที่เกี่ยวข้อง")
+        st.subheader("👥 รายการจองซ้อมของฉันและคู่ซ้อม")
         my_bookings = [b for b in bookings if st.session_state.user in b.get('user', '') or st.session_state.user in b.get('partner', '')]
         
         if not my_bookings:
-            st.info("คุณยังไม่มีประวัติการจองหรือยังไม่ได้เป็นคู่ซ้อมในขณะนี้")
+            st.info("คุณยังไม่มีรายการจองซ้อมในระบบ")
         else:
             for b in my_bookings:
                 with st.container(border=True):
-                    st.markdown(f"**📍 ห้อง:** {b.get('room')} | **📅 วันที่:** {b.get('date')} (เวลา: {b.get('time')})")
-                    st.text(f"ผู้จองหลัก: {b.get('user')} | คู่ซ้อม: {b.get('partner', '-')}")
-                    st.caption(f"อุปกรณ์ที่จอง: {b.get('equipments') or '-'}")
-                    st.markdown("🟢 **สถานะ:** กำลังดำเนินการ / รอใช้งาน")
+                    st.markdown(f"**📍 ห้อง:** {b.get('room')} | **📅 วันที่:** {b.get('date')}")
+                    st.text(f"ผู้จองหลัก: {b.get('user')} | คู่ซ้อม: {b.get('partner')}")
+                    st.caption(f"อุปกรณ์: {b.get('equipments')}")
+                    st.markdown("🟢 **สถานะ:** รอดำเนินการ / พร้อมใช้งาน")
 
-    # ---------------- 4. หน้าจัดการระบบ ----------------
+    # ---------------- 5. จัดการระบบ (Admin) ----------------
     with tab_manage:
-        st.subheader("⚙️ หน้าจัดการระบบ (เพิ่ม/ลดอุปกรณ์ และตั้งค่า)")
+        st.warning("⚠️ โหมดผู้ดูแลระบบ (เปิดสิทธิ์ให้ทุกคน): สมาชิกสามารถเพิ่ม แก้ไข หรือลบข้อมูลห้องและอุปกรณ์ได้ทันที Real-time")
         
-        new_eq = st.text_input("ชื่ออุปกรณ์ส่วนกลางใหม่", key="new_eq_input")
-        if st.button("เพิ่มอุปกรณ์", use_container_width=True):
-            if new_eq.strip():
-                requests.post(GOOGLE_SCRIPT_URL, json={"action": "addEquipment", "name": new_eq.strip()})
-                st.success(f"เพิ่ม {new_eq} สำเร็จ!")
-                st.cache_data.clear()
-                st.rerun()
+        col_mg1, col_mg2 = st.columns(2)
+        
+        with col_mg1:
+            st.markdown("### 🛏️ จัดการเปิดห้องปฏิบัติการ")
+            with st.form("room_form", clear_on_submit=True):
+                r_name = st.text_input("ชื่อห้องซ้อม", placeholder="เช่น ห้องปฏิบัติการกายภาพ 1")
+                r_date = st.date_input("วันที่เปิดซ้อม")
+                r_c1, r_c2 = st.columns(2)
+                r_start = r_c1.time_input("เวลาเริ่มเปิด", value=datetime.strptime("09:00", "%H:%M").time())
+                r_end = r_c2.time_input("เวลาปิด", value=datetime.strptime("16:00", "%H:%M").time())
                 
-        st.markdown("#### รายการอุปกรณ์ปัจจุบันในระบบ")
-        if equipments:
-            for eq in equipments:
-                c1, c2 = st.columns([3, 1])
-                c1.text(eq)
-                if c2.button("ลบ", key=f"del_eq_{eq}"):
-                    requests.post(GOOGLE_SCRIPT_URL, json={"action": "deleteEquipment", "name": eq})
+                r_sub = st.form_submit_button("＋ เพิ่มห้องเปิดซ้อม", type="primary", use_container_width=True)
+                if r_sub and r_name.strip():
+                    payload = {
+                        "action": "addRoomDetail",
+                        "name": r_name.strip(),
+                        "date": str(r_date),
+                        "time": f"{r_start.strftime('%H:%M')} - {r_end.strftime('%H:%M')}"
+                    }
+                    requests.post(GOOGLE_SCRIPT_URL, json=payload)
+                    st.success("เพิ่มห้องสำเร็จ!")
                     st.cache_data.clear()
                     st.rerun()
-        else:
-            st.info("ยังไม่มีอุปกรณ์ในระบบ")
+
+        with col_mg2:
+            st.markdown("### 📦 จัดการรายการอุปกรณ์ซ้อม")
+            with st.form("eq_form", clear_on_submit=True):
+                eq_name = st.text_input("ชื่ออุปกรณ์", placeholder="เช่น ชุดฝึกฉีดยาเข้ากล้ามเนื้อ")
+                eq_count = st.number_input("จำนวนที่มี (ชุด/เครื่อง)", min_value=1, value=2)
+                eq_time = st.number_input("เวลาซ้อมต่อรอบ (นาที)", min_value=5, value=30)
+                
+                eq_sub = st.form_submit_button("＋ เพิ่มอุปกรณ์", type="primary", use_container_width=True)
+                if eq_sub and eq_name.strip():
+                    payload = {
+                        "action": "addEquipmentDetail",
+                        "name": eq_name.strip(),
+                        "count": eq_count,
+                        "time": eq_time
+                    }
+                    requests.post(GOOGLE_SCRIPT_URL, json=payload)
+                    st.success("เพิ่มอุปกรณ์สำเร็จ!")
+                    st.cache_data.clear()
+                    st.rerun()
+
